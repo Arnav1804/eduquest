@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduQuest — Gamified STEM Learning</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- Page Loader -->
+<div id="page-loader">
+  <div style="text-align:center;">
+    <div class="loader-ring"></div>
+    <p style="margin-top:12px; color:var(--text-muted); font-size:0.85rem;">Loading EduQuest…</p>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Match Checkmark (memory game) -->
+<div id="match-checkmark">✓</div>
+
+<!-- Sidebar -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">🎓</div>
+    <span class="sidebar-logo-text">EduQuest</span>
+  </div>
+  <div class="sidebar-user">
+    <div class="sidebar-avatar" id="sidebar-avatar">S</div>
+    <div>
+      <div class="sidebar-user-name" id="sidebar-username">Student</div>
+      <div class="sidebar-user-role" id="sidebar-role">Student · Grade 6</div>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-nav-section">
+      <div class="sidebar-nav-label">Navigation</div>
+      <button class="nav-item active" onclick="showDashboard(); closeSidebar();" id="nav-home">
+        <span class="nav-item-icon">🏠</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="closeSidebar(); scrollToSection('lessons-section')">
+        <span class="nav-item-icon">📚</span> Lessons
+      </button>
+      <button class="nav-item" onclick="closeSidebar(); scrollToSection('badges-section')">
+        <span class="nav-item-icon">🏆</span> Badges
+      </button>
+    </div>
+    <div class="sidebar-nav-section" id="nav-teacher-section" style="display:none;">
+      <div class="sidebar-nav-label">Teacher</div>
+      <button class="nav-item" onclick="showTeacherDashboard(); closeSidebar();">
+        <span class="nav-item-icon">📊</span> Teacher Dashboard
+      </button>
+    </div>
+    <div class="sidebar-nav-section">
+      <div class="sidebar-nav-label">Account</div>
+      <button class="nav-item" onclick="exportUserData()">
+        <span class="nav-item-icon">💾</span> Export Data
+      </button>
+      <button class="nav-item" onclick="importUserData()">
+        <span class="nav-item-icon">📥</span> Import Data
+      </button>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <button class="btn btn-secondary w-full" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- ============ LANDING SCREEN ============ -->
+<div id="landing-screen" class="screen active">
+  <div class="landing-grid">
+    <div class="landing-hero">
+      <div class="landing-badge">🚀 Gamified STEM Learning Platform</div>
+      <h1>Learn <span>Smarter</span>,<br>Level Up Faster</h1>
+      <p>EduQuest makes science, math and tech exciting with quizzes, memory games and real-time progress tracking.</p>
+      <div class="landing-cta-row">
+        <a href="login.html" class="btn btn-primary btn-lg">Get Started →</a>
+        <a href="register.html" class="btn btn-secondary btn-lg" style="background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.25); color:white;">Create Account</a>
+      </div>
+    </div>
+    <div class="landing-cards">
+      <div class="portal-card" onclick="enterAsGuest('student')">
+        <div class="portal-card-icon" style="background:rgba(125,211,252,0.2);">🎓</div>
+        <h3>Student Portal</h3>
+        <p>Track progress, earn badges, play quizzes and hit your daily goals.</p>
+        <div class="card-btn">Enter as Student →</div>
+      </div>
+      <div class="portal-card" onclick="enterAsGuest('faculty')">
+        <div class="portal-card-icon" style="background:rgba(0,201,167,0.2);">👩‍🏫</div>
+        <h3>Teacher Dashboard</h3>
+        <p>Monitor class performance, upload materials and post announcements.</p>
+        <div class="card-btn">Enter as Teacher →</div>
+      </div>
+    </div>
+    <div class="landing-features">
+      <div class="feature-item">
+        <div class="icon">🎮</div>
+        <h4>Gamified Games</h4>
+        <p>5 interactive game types to reinforce learning</p>
+      </div>
+      <div class="feature-item">
+        <div class="icon">📈</div>
+        <h4>Real-time Progress</h4>
+        <p>Live score updates and badge system</p>
+      </div>
+      <div class="feature-item">
+        <div class="icon">🏅</div>
+        <h4>Earn Badges</h4>
+        <p>Unlock achievements as you master subjects</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STUDENT DASHBOARD SCREEN ============ -->
+<div id="dashboard-screen" class="screen">
+  <!-- Top Nav -->
+  <header class="topnav">
+    <div class="topnav-left">
+      <button class="btn-icon" id="menu-btn" onclick="openSidebar()" title="Menu" style="font-size:1.4rem;">☰</button>
+      <span class="topnav-logo">EduQuest</span>
+    </div>
+    <div class="topnav-right">
+      <select id="header-lang" aria-label="Language" style="border:1.5px solid var(--border); padding:6px 10px; border-radius:var(--radius); background:var(--bg-secondary); font-size:0.82rem; font-family:var(--font-sans); color:var(--text-primary);">
+        <option value="en">🌐 English</option>
+        <option value="hi">🇮🇳 हिन्दी</option>
+        <option value="od">🇮🇳 ଓଡ଼ିଆ</option>
+      </select>
+      <div class="topnav-avatar" id="topnav-avatar" onclick="openSidebar()">S</div>
+    </div>
+  </header>
+
+  <main class="dash-layout">
+
+    <!-- WELCOME CARD -->
+    <div class="welcome-card">
+      <div class="welcome-top">
+        <div>
+          <div class="welcome-greeting">Good day,</div>
+          <div class="welcome-name" id="username">Student</div>
+          <div class="welcome-subtitle">Keep it up! You're doing great. 🎯</div>
+        </div>
+        <div class="welcome-streak">
+          <span class="streak-num">🔥</span>
+          <span class="streak-label">Active</span>
+        </div>
+      </div>
+      <div class="welcome-stats">
+        <div class="welcome-stat">
+          <span class="welcome-stat-val" id="total-points">0</span>
+          <span class="welcome-stat-label">⭐ Points</span>
+        </div>
+        <div class="welcome-stat">
+          <span class="welcome-stat-val" id="badges-count">0</span>
+          <span class="welcome-stat-label">🏆 Badges</span>
+        </div>
+        <div class="welcome-stat">
+          <span class="welcome-stat-val" id="lessons-completed">0</span>
+          <span class="welcome-stat-label">📚 Lessons</span>
+        </div>
+      </div>
+      <div class="daily-goal-section">
+        <div class="daily-goal-label">
+          <span id="goal-text">Daily Goal: Solve 5 problems</span>
+          <span id="daily-goal-done">0</span>/<span id="daily-goal-target">5</span>
+        </div>
+        <div class="daily-goal-bar">
+          <div class="daily-goal-fill" id="daily-goal-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div id="student-portal">
+      <div class="section-title">Your Progress</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon purple">📐</div>
+          <div class="stat-body">
+            <div class="stat-value" id="math-score-display">0</div>
+            <div class="stat-label">Math Score</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">🔬</div>
+          <div class="stat-body">
+            <div class="stat-value" id="science-score-display">0</div>
+            <div class="stat-label">Science Score</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">📖</div>
+          <div class="stat-body">
+            <div class="stat-value" id="english-score-display">0</div>
+            <div class="stat-label">English Score</div>
+          </div>
+        </div>
+        <div class="stat-card" id="recent-activity-card">
+          <div class="stat-icon" style="background:#f0fdf4;">🏃</div>
+          <div class="stat-body">
+            <div class="stat-value" id="activity-count">0</div>
+            <div class="stat-label">Activities Done</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTINUE LEARNING -->
+      <div class="section-title mt-6">Continue Learning</div>
+      <div id="continue-learning-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+      <!-- RECENT ACTIVITY -->
+      <div class="section-title mt-6">Recent Activity</div>
+      <div id="recent-activity-list" class="activity-list"></div>
+
+      <!-- ANNOUNCEMENTS -->
+      <div class="section-title mt-6" id="announcements-section-header" style="display:none;">Announcements</div>
+      <div id="student-announcements-list" class="activity-list"></div>
+    </div>
+
+    <!-- BADGES SECTION -->
+    <div id="badges-section">
+      <div class="section-title">Your Badges</div>
+      <div class="badges-grid" id="badges-container">
+        <div class="badge-card locked" data-badge="math">
+          <div class="badge-emoji">🧮</div>
+          <div class="badge-name">Math Whiz</div>
+        </div>
+        <div class="badge-card locked" data-badge="science">
+          <div class="badge-emoji">🔬</div>
+          <div class="badge-name">Science Explorer</div>
+        </div>
+        <div class="badge-card locked" data-badge="memory">
+          <div class="badge-emoji">🧠</div>
+          <div class="badge-name">Memory Master</div>
+        </div>
+        <div class="badge-card locked" data-badge="geometry">
+          <div class="badge-emoji">📐</div>
+          <div class="badge-name">Geo Pro</div>
+        </div>
+        <div class="badge-card locked" data-badge="physics">
+          <div class="badge-emoji">⚡</div>
+          <div class="badge-name">Physics Ace</div>
+        </div>
+        <div class="badge-card locked" data-badge="math_master">
+          <div class="badge-emoji">🏆</div>
+          <div class="badge-name">Math Master</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LESSONS SECTION -->
+    <div id="lessons-section">
+      <div class="section-title">STEM Lessons</div>
+      <div class="lessons-grid">
+
+        <div class="lesson-card card-hover" data-lesson="math">
+          <div class="lesson-card-top">
+            <div class="lesson-icon-wrap" style="background:#ededff;">➕</div>
+            <div class="chip chip-primary">Math</div>
+          </div>
+          <div>
+            <h4>Mathematics Puzzle</h4>
+            <p>Solve equations and unlock rewards</p>
+          </div>
+          <div class="lesson-meta">
+            <span class="lesson-difficulty" style="color:var(--success);">● Easy</span>
+            <span class="lesson-points">+10 pts/q</span>
+          </div>
+          <div class="lesson-progress-wrap">
+            <div class="lesson-progress-label">
+              <span>Progress</span>
+              <span id="math-pct">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" data-lesson="math" style="width:0%"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="showGameStart('math')">Start →</button>
+        </div>
+
+        <div class="lesson-card card-hover" data-lesson="science">
+          <div class="lesson-card-top">
+            <div class="lesson-icon-wrap" style="background:#ecfdf5;">🔬</div>
+            <div class="chip chip-accent">Science</div>
+          </div>
+          <div>
+            <h4>Science Quiz</h4>
+            <p>Physics, Biology and Chemistry questions</p>
+          </div>
+          <div class="lesson-meta">
+            <span class="lesson-difficulty" style="color:var(--warning);">● Medium</span>
+            <span class="lesson-points">+10 pts/q</span>
+          </div>
+          <div class="lesson-progress-wrap">
+            <div class="lesson-progress-label">
+              <span>Progress</span>
+              <span id="science-pct">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" data-lesson="science" style="width:0%"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="showGameStart('science')">Start →</button>
+        </div>
+
+        <div class="lesson-card card-hover" data-lesson="geometry">
+          <div class="lesson-card-top">
+            <div class="lesson-icon-wrap" style="background:#fff7ed;">📐</div>
+            <div class="chip chip-warning">Geometry</div>
+          </div>
+          <div>
+            <h4>Geometry Drill</h4>
+            <p>Angles, areas, perimeters and shapes</p>
+          </div>
+          <div class="lesson-meta">
+            <span class="lesson-difficulty" style="color:var(--warning);">● Medium</span>
+            <span class="lesson-points">+10 pts/q</span>
+          </div>
+          <div class="lesson-progress-wrap">
+            <div class="lesson-progress-label">
+              <span>Progress</span>
+              <span id="geometry-pct">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" data-lesson="geometry" style="width:0%"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="showGameStart('geometry')">Start →</button>
+        </div>
+
+        <div class="lesson-card card-hover" data-lesson="physics">
+          <div class="lesson-card-top">
+            <div class="lesson-icon-wrap" style="background:#fff0f0;">⚡</div>
+            <div class="chip" style="background:#fff0f0; color:#ef4444;">Physics</div>
+          </div>
+          <div>
+            <h4>Physics Rapid-Fire</h4>
+            <p>Race against the clock with rapid questions</p>
+          </div>
+          <div class="lesson-meta">
+            <span class="lesson-difficulty" style="color:var(--danger);">● Hard</span>
+            <span class="lesson-points">+5 pts/q</span>
+          </div>
+          <div class="lesson-progress-wrap">
+            <div class="lesson-progress-label">
+              <span>Progress</span>
+              <span id="physics-pct">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" data-lesson="physics" style="width:0%"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="showGameStart('physics')">Start →</button>
+        </div>
+
+        <div class="lesson-card card-hover" data-lesson="memory">
+          <div class="lesson-card-top">
+            <div class="lesson-icon-wrap" style="background:#f0f0ff;">🧠</div>
+            <div class="chip chip-primary">Memory</div>
+          </div>
+          <div>
+            <h4>Memory Match — Vocab</h4>
+            <p>Match words to their definitions</p>
+          </div>
+          <div class="lesson-meta">
+            <span class="lesson-difficulty" style="color:var(--primary);">● Brain Teaser</span>
+            <span class="lesson-points">+20 pts</span>
+          </div>
+          <div class="lesson-progress-wrap">
+            <div class="lesson-progress-label">
+              <span>Progress</span>
+              <span id="memory-pct">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" data-lesson="memory" style="width:0%"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="showGameStart('memory')">Start →</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LEARNING MATERIALS (Faculty only) -->
+    <div id="materials-section" style="display:none;">
+      <div class="section-title">
+        Learning Materials
+        <button id="upload-btn" onclick="openUploadModal()">+ Upload</button>
+      </div>
+      <div class="materials-grid" id="materials-grid">
+        <div class="material-card">
+          <div class="material-thumb">📘</div>
+          <div class="material-info">
+            <h4>Mathematics Basics</h4>
+            <p>Algebra and Geometry fundamentals</p>
+            <div class="material-meta">
+              <span class="chip chip-primary">PDF</span>
+              <span class="text-xs text-muted">2.4 MB</span>
+            </div>
+          </div>
+        </div>
+        <div class="material-card">
+          <div class="material-thumb">🔬</div>
+          <div class="material-info">
+            <h4>Science Wonders</h4>
+            <p>Physics and Chemistry experiments</p>
+            <div class="material-meta">
+              <span class="chip chip-accent">PDF</span>
+              <span class="text-xs text-muted">3.1 MB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /dashboard-screen -->
+
+<!-- ============ GAME SCREEN ============ -->
+<div id="game-screen" class="screen">
+
+  <!-- Game Start Screen -->
+  <div id="game-start-screen" class="game-start-screen">
+    <div class="game-start-icon" id="game-start-icon">🎮</div>
+    <h2 id="game-start-title">Game Title</h2>
+    <p id="game-start-desc">Description</p>
+    <div class="game-info-pills">
+      <span class="game-info-pill" id="game-info-time">⏱ 60s Timer</span>
+      <span class="game-info-pill" id="game-info-pts">⭐ +10 pts/correct</span>
+      <span class="game-info-pill" id="game-info-difficulty">📊 Medium</span>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+      <button class="btn btn-primary btn-lg" id="game-start-btn" onclick="launchCurrentGame()">🚀 Start Game</button>
+      <button class="btn btn-secondary btn-lg" onclick="showDashboard()">← Back</button>
+    </div>
+  </div>
+
+  <!-- Active Game -->
+  <div id="game-active-area" style="display:none;">
+    <!-- Top bar -->
+    <div class="game-topbar">
+      <button class="btn-icon" onclick="confirmExitGame()" style="color:rgba(255,255,255,0.7);">✕</button>
+      <h2 id="game-title">Game</h2>
+      <div style="display:flex; gap:10px;">
+        <div class="game-stat-pill">⭐ <span id="game-score">0</span></div>
+        <div class="game-stat-pill" id="timer-pill">⏱ <span id="game-timer">60</span>s</div>
+      </div>
+    </div>
+
+    <!-- Game progress bar -->
+    <div class="game-progress-bar">
+      <div class="game-progress-fill" id="game-progress-fill" style="width:0%"></div>
+    </div>
+
+    <div class="game-container">
+
+      <!-- Math Quiz -->
+      <div id="math-game-section" style="display:none;">
+        <div class="question-box">
+          <div class="question-num" id="math-q-num">Question 1 of 10</div>
+          <div class="question-text" id="math-question">Loading…</div>
+        </div>
+        <div class="options-grid" id="math-options"></div>
+        <div class="game-feedback" id="math-feedback"></div>
+      </div>
+
+      <!-- Science Quiz -->
+      <div id="science-quiz-section" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-size:0.85rem; color:rgba(255,255,255,0.7);">
+          <span>Question <span id="science-qnum">1</span> of <span id="science-qtotal">10</span></span>
+          <span>Score: <span id="science-score">0</span></span>
+        </div>
+        <div class="question-box">
+          <div class="question-text" id="science-question"></div>
+        </div>
+        <div class="options-grid" id="science-options" style="margin-bottom:12px;"></div>
+        <div class="game-feedback" id="science-feedback"><span id="science-feedback-text"></span></div>
+        <div style="text-align:right; margin-top:12px;">
+          <button class="btn btn-secondary btn-sm" id="science-next" style="background:rgba(255,255,255,0.15); color:white; border-color:rgba(255,255,255,0.25);">Next →</button>
+        </div>
+        <div class="quiz-complete-box" id="science-complete" style="display:none;">
+          <p style="font-size:1.5rem; margin-bottom:8px;">🎉</p>
+          <p id="science-complete-text" style="font-weight:700;"></p>
+          <button class="btn btn-accent btn-sm" id="science-restart" style="margin-top:12px;">Play Again</button>
+        </div>
+      </div>
+
+      <!-- Geometry Drill -->
+      <div id="geometry-game-section" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-size:0.85rem; color:rgba(255,255,255,0.7);">
+          <span>Question <span id="geometry-qnum">1</span> of <span id="geometry-qtotal">5</span></span>
+          <span>Score: <span id="geometry-score">0</span></span>
+        </div>
+        <div class="question-box">
+          <div class="question-text" id="geometry-question"></div>
+        </div>
+        <div class="options-grid" id="geometry-options" style="margin-bottom:12px;"></div>
+        <div class="game-feedback" id="geometry-feedback"><span id="geometry-feedback-text"></span></div>
+        <div style="text-align:right; margin-top:12px;">
+          <button class="btn btn-secondary btn-sm" id="geometry-next" style="background:rgba(255,255,255,0.15); color:white; border-color:rgba(255,255,255,0.25);">Next →</button>
+        </div>
+        <div class="quiz-complete-box" id="geometry-complete" style="display:none;">
+          <p style="font-size:1.5rem; margin-bottom:8px;">🎉</p>
+          <p id="geometry-complete-text" style="font-weight:700;"></p>
+          <button class="btn btn-accent btn-sm" id="geometry-restart" style="margin-top:12px;">Play Again</button>
+        </div>
+      </div>
+
+      <!-- Physics Rapid-Fire -->
+      <div id="physics-game-section" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-size:0.85rem; color:rgba(255,255,255,0.7);">
+          <span>⏱ Time left: <span id="physics-time">45</span>s</span>
+          <span>Score: <span id="physics-score">0</span></span>
+        </div>
+        <div class="question-box">
+          <div class="question-text" id="physics-question"></div>
+        </div>
+        <div class="options-grid" id="physics-options" style="margin-bottom:12px;"></div>
+        <div class="quiz-complete-box" id="physics-complete" style="display:none;">
+          <p style="font-size:1.5rem; margin-bottom:8px;">⏱ Time's Up!</p>
+          <p id="physics-complete-text" style="font-weight:700;"></p>
+          <button class="btn btn-accent btn-sm" id="physics-restart" style="margin-top:12px;">Play Again</button>
+        </div>
+      </div>
+
+      <!-- Memory Match -->
+      <div id="memory-game-section" style="display:none;">
+        <div class="memory-game-header">
+          <div class="memory-stats">
+            <span>🔄 <strong id="memory-moves">0</strong> moves</span>
+            <span>✅ <strong id="memory-matches">0</strong> / 10</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="memory-restart" style="background:rgba(255,255,255,0.15); color:white; border-color:rgba(255,255,255,0.25);">Restart</button>
+        </div>
+        <div class="memory-grid" id="memory-grid"></div>
+        <div class="quiz-complete-box" id="memory-complete" style="display:none;">
+          <p style="font-size:1.5rem; margin-bottom:8px;">🧠 All Matched!</p>
+          <p id="memory-feedback-text" style="font-weight:700;"></p>
+        </div>
+      </div>
+
+    </div><!-- /game-container -->
+  </div><!-- /game-active-area -->
+
+  <!-- Results Screen -->
+  <div id="results-screen" class="results-screen">
+    <div class="results-trophy" id="results-emoji">🏆</div>
+    <div class="results-title" id="results-title">Great Job!</div>
+    <div class="results-subtitle" id="results-subtitle">You've completed the challenge</div>
+
+    <div class="results-stats-grid">
+      <div class="results-stat">
+        <span class="results-stat-val" id="final-score">0</span>
+        <div class="results-stat-label">Points</div>
+      </div>
+      <div class="results-stat">
+        <span class="results-stat-val" id="correct-answers">0</span>
+        <div class="results-stat-label">Correct</div>
+      </div>
+      <div class="results-stat">
+        <span class="results-stat-val" id="total-questions">10</span>
+        <div class="results-stat-label">Total</div>
+      </div>
+    </div>
+
+    <div class="badge-earned-box hidden" id="badge-earned">
+      <div class="trophy">🏅</div>
+      <div>
+        <h4>New Badge Earned!</h4>
+        <p id="badge-name">Math Master</p>
+      </div>
+    </div>
+
+    <div class="results-actions">
+      <button class="btn btn-primary btn-lg" onclick="showDashboard()">← Back to Dashboard</button>
+      <button class="btn btn-accent btn-lg" id="play-again-btn" onclick="replayCurrentGame()">Play Again</button>
+    </div>
+  </div>
+
+</div><!-- /game-screen -->
+
+<!-- ============ TEACHER DASHBOARD ============ -->
+<div id="teacher-screen" class="screen">
+  <header class="teacher-topbar">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="btn-icon" onclick="openSidebar()" style="font-size:1.3rem;">☰</button>
+      <span style="font-family:var(--font-display); font-weight:700; font-size:1.1rem;">Teacher Dashboard</span>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <span style="font-size:0.82rem; color:var(--text-muted);" id="teacher-name-display">Faculty</span>
+      <button class="btn btn-secondary btn-sm" onclick="showDashboard()">Student View</button>
+    </div>
+  </header>
+
+  <div class="teacher-layout">
+
+    <!-- Summary Cards -->
+    <div class="teacher-stats-row">
+      <div class="teacher-stat-card">
+        <div class="label">Total Students</div>
+        <div class="value" id="teacher-total-students">0</div>
+        <div class="change">↑ Registered</div>
+      </div>
+      <div class="teacher-stat-card">
+        <div class="label">Avg. Score</div>
+        <div class="value" id="teacher-avg-score">0</div>
+        <div class="change">Points average</div>
+      </div>
+      <div class="teacher-stat-card">
+        <div class="label">Lessons Done</div>
+        <div class="value" id="teacher-lessons-done">0</div>
+        <div class="change">Total across students</div>
+      </div>
+      <div class="teacher-stat-card">
+        <div class="label">Badges Earned</div>
+        <div class="value" id="teacher-badges">0</div>
+        <div class="change">Total across students</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Average Subject Scores</h3>
+        <canvas id="scores-chart" height="200"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Lesson Completion</h3>
+        <canvas id="completion-chart" height="200"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Badge Distribution</h3>
+        <canvas id="badges-chart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Student List -->
+    <div class="students-table-card">
+      <div class="section-title">
+        Student Progress
+        <div style="display:flex; gap:8px;">
+          <select id="subject-filter" style="padding:6px 10px; border:1.5px solid var(--border); border-radius:var(--radius); font-size:0.82rem; font-family:var(--font-sans);">
+            <option value="all">All Subjects</option>
+            <option value="math">Math</option>
+            <option value="science">Science</option>
+          </select>
+        </div>
+      </div>
+      <div id="students-list"></div>
+    </div>
+
+    <!-- Upload Data -->
+    <div class="students-table-card">
+      <div class="section-title">Upload Student Data</div>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">Upload JSON files exported from student devices to view analytics</p>
+      <div class="upload-area" id="teacher-upload-area" onclick="document.getElementById('student-data-upload').click()">
+        <div class="upload-icon">📂</div>
+        <p>Drag & drop or <span>click to upload</span> student data JSON files</p>
+      </div>
+      <input type="file" id="student-data-upload" multiple accept=".json" style="display:none;">
+      <div id="uploaded-files" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- Announcements -->
+    <div class="students-table-card">
+      <div class="section-title">Post Announcement</div>
+      <div class="announce-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Title</label>
+            <input id="ann-title" class="input" type="text" placeholder="Announcement title">
+          </div>
+          <div class="form-group">
+            <label>Audience</label>
+            <select id="ann-audience" class="input">
+              <option value="all">All Students</option>
+              <option value="student">Specific Student</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Student Name (optional)</label>
+            <input id="ann-target" class="input" type="text" placeholder="Leave blank for all">
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <input id="ann-message" class="input" type="text" placeholder="Your message here…">
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <button class="btn btn-primary" id="post-announcement-btn">📢 Post Announcement</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /teacher-screen -->
+
+<!-- ============ UPLOAD MODAL ============ -->
+<div id="upload-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Upload Learning Material</h3>
+      <button class="close-modal" onclick="closeUploadModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="upload-area" id="upload-drop-area">
+        <div class="upload-icon">📁</div>
+        <p>Drag and drop your file here or <span>browse</span></p>
+        <input type="file" id="file-input" style="display:none;" accept=".pdf,.doc,.docx,.ppt,.pptx">
+      </div>
+      <div id="upload-preview" style="display:none; margin-top:16px;">
+        <div style="display:flex; align-items:center; gap:12px; padding:14px; background:var(--bg-secondary); border-radius:var(--radius);">
+          <span style="font-size:1.8rem;">📄</span>
+          <div style="flex:1;">
+            <div class="font-bold text-sm file-name"></div>
+            <div class="text-xs text-muted file-size"></div>
+          </div>
+          <button class="btn-icon remove-file">✕</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+      <button class="btn btn-primary" id="confirm-upload" disabled>Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ EXIT GAME MODAL ============ -->
+<div id="exit-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Exit Game?</h3>
+      <button class="close-modal" onclick="document.getElementById('exit-modal').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-secondary);">Your current progress in this game will be lost. Are you sure you want to exit?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('exit-modal').classList.remove('show')">Keep Playing</button>
+      <button class="btn btn-primary" onclick="exitGameConfirmed()">Exit Game</button>
+    </div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+<script>
+// ============================================================
+//  EDUQUEST — App Core v2.0
+// ============================================================
+
+// ─── STATE ───────────────────────────────────────────────────
+let userData = {
+  role: 'student', username: 'Student', phone: '', email: '',
+  gradeLevel: '6', points: 0, badges: [],
+  lessonsCompleted: 0, mathProgress: 0, scienceProgress: 0,
+  memoryProgress: 0, geometryProgress: 0, physicsProgress: 0,
+  language: 'en'
+};
+let currentGameType = null;
+
+// ─── INIT ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', initApp);
+
+function initApp() {
+  loadUserData();
+
+  // Check if logged in
+  const stored = localStorage.getItem('eduquest_user');
+  if (stored) {
+    try { userData = { ...userData, ...JSON.parse(stored) }; } catch(e) {}
+  }
+
+  // Determine start screen
+  const hash = window.location.hash;
+  if (userData.role === 'faculty' && !hash) {
+    showTeacherDashboard();
+  } else if (stored) {
+    showDashboard();
+  } else {
+    showScreen('landing-screen');
+  }
+
+  // Hide loader
+  setTimeout(() => {
+    const loader = document.getElementById('page-loader');
+    loader.classList.add('hidden');
+    setTimeout(() => loader.style.display = 'none', 400);
+  }, 600);
+
+  // Listeners
+  setupListeners();
+
+  // Service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  }
+}
+
+function setupListeners() {
+  // Upload
+  const dropArea = document.getElementById('upload-drop-area');
+  const fileInput = document.getElementById('file-input');
+  if (dropArea) {
+    dropArea.addEventListener('click', () => fileInput.click());
+    dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('dragover'); });
+    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+    dropArea.addEventListener('drop', e => { e.preventDefault(); dropArea.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+  }
+
+  // Teacher upload
+  const teacherUpload = document.getElementById('student-data-upload');
+  if (teacherUpload) teacherUpload.addEventListener('change', handleTeacherUpload);
+
+  // Math game (from game.js module)
+  const mathOpts = document.getElementById('math-options');
+  if (mathOpts) {
+    mathOpts.addEventListener('click', function(e) {
+      if (e.target.classList.contains('option-btn')) {
+        const idx = Array.from(this.children).indexOf(e.target);
+        handleMathAnswer(idx);
+      }
+    });
+  }
+
+  // Post announcement
+  const annBtn = document.getElementById('post-announcement-btn');
+  if (annBtn) annBtn.addEventListener('click', postAnnouncement);
+
+  // Landing portal buttons
+  document.querySelectorAll('[data-lesson]').forEach(card => {
+    card.addEventListener('keydown', e => { if (e.key === 'Enter') card.querySelector('button').click(); });
+  });
+}
+
+// ─── SCREEN MANAGEMENT ───────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active', 'fade-in');
+  });
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  setTimeout(() => el.classList.add('fade-in'), 10);
+  window.scrollTo(0, 0);
+}
+
+function showLoading(cb, delay=250) {
+  const loader = document.getElementById('page-loader');
+  loader.style.display = 'flex';
+  loader.classList.remove('hidden');
+  setTimeout(() => {
+    cb();
+    setTimeout(() => {
+      loader.classList.add('hidden');
+      setTimeout(() => loader.style.display = 'none', 400);
+    }, 150);
+  }, delay);
+}
+
+function showDashboard() {
+  showLoading(() => {
+    showScreen('dashboard-screen');
+    updateDashboard();
+    initStudentPortal();
+    // Show/hide sections by role
+    const isFaculty = userData.role === 'faculty';
+    document.getElementById('student-portal').style.display = isFaculty ? 'none' : '';
+    document.getElementById('materials-section').style.display = isFaculty ? '' : 'none';
+    document.getElementById('nav-teacher-section').style.display = isFaculty ? '' : 'none';
+    updateSidebar();
+  });
+}
+
+function showTeacherDashboard() {
+  showLoading(() => {
+    showScreen('teacher-screen');
+    document.getElementById('teacher-name-display').textContent = userData.username;
+    document.getElementById('nav-teacher-section').style.display = '';
+    updateSidebar();
+    initTeacherDashboard();
+  });
+}
+
+function showGameStart(type) {
+  currentGameType = type;
+  const meta = {
+    math:     { icon:'➕', title:'Mathematics Puzzle', desc:'Solve 10 math problems in 60 seconds. Each correct answer earns +10 points!', time:'⏱ 60s Timer', pts:'⭐ +10 pts/correct', diff:'📊 Easy' },
+    science:  { icon:'🔬', title:'Science Quiz', desc:'Answer 10 science questions spanning Physics, Biology and Chemistry.', time:'⏱ No timer', pts:'⭐ +10 pts/correct', diff:'📊 Medium' },
+    geometry: { icon:'📐', title:'Geometry Drill', desc:'Test your knowledge of shapes, angles, areas and perimeters.', time:'⏱ No timer', pts:'⭐ +10 pts/correct', diff:'📊 Medium' },
+    physics:  { icon:'⚡', title:'Physics Rapid-Fire', desc:'Answer as many physics questions as possible in 45 seconds!', time:'⏱ 45s Timer', pts:'⭐ +5 pts/correct', diff:'📊 Hard' },
+    memory:   { icon:'🧠', title:'Memory Match — Vocab', desc:'Match vocabulary words to their definitions. Complete all 10 pairs!', time:'⏱ No timer', pts:'⭐ +20 pts bonus', diff:'📊 Brain Teaser' }
+  }[type];
+
+  document.getElementById('game-start-icon').textContent = meta.icon;
+  document.getElementById('game-start-title').textContent = meta.title;
+  document.getElementById('game-start-desc').textContent = meta.desc;
+  document.getElementById('game-info-time').textContent = meta.time;
+  document.getElementById('game-info-pts').textContent = meta.pts;
+  document.getElementById('game-info-difficulty').textContent = meta.diff;
+
+  showScreen('game-screen');
+  document.getElementById('game-start-screen').style.display = 'flex';
+  document.getElementById('game-active-area').style.display = 'none';
+  document.getElementById('results-screen').classList.remove('active');
+}
+
+function launchCurrentGame() {
+  document.getElementById('game-start-screen').style.display = 'none';
+  document.getElementById('game-active-area').style.display = 'block';
+  document.getElementById('results-screen').classList.remove('active');
+  startLesson(currentGameType);
+}
+
+function replayCurrentGame() {
+  if (currentGameType) showGameStart(currentGameType);
+}
+
+function confirmExitGame() {
+  document.getElementById('exit-modal').classList.add('show');
+}
+
+function exitGameConfirmed() {
+  document.getElementById('exit-modal').classList.remove('show');
+  if (typeof gameState !== 'undefined') clearInterval(gameState.timerInterval);
+  if (typeof phyState !== 'undefined') clearInterval(phyState.timerId);
+  showDashboard();
+}
+
+// ─── GUEST LOGIN ──────────────────────────────────────────────
+function enterAsGuest(role) {
+  if (role === 'faculty') {
+    userData = { ...userData, role: 'faculty', username: 'Teacher', email: 'teacher@demo.com' };
+    saveUserData();
+    showTeacherDashboard();
+  } else {
+    userData = { ...userData, role: 'student', username: 'Guest Student' };
+    saveUserData();
+    showDashboard();
+  }
+  toast('Welcome to EduQuest! 🎉', 'success');
+}
+
+function logout() {
+  localStorage.removeItem('eduquest_user');
+  userData = { role:'student', username:'Student', points:0, badges:[], lessonsCompleted:0, mathProgress:0, scienceProgress:0, memoryProgress:0, geometryProgress:0, physicsProgress:0, language:'en' };
+  showScreen('landing-screen');
+  closeSidebar();
+  toast('Signed out successfully');
+}
+
+// ─── SIDEBAR ─────────────────────────────────────────────────
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function updateSidebar() {
+  const name = userData.username || 'User';
+  document.getElementById('sidebar-username').textContent = name;
+  const initial = name.charAt(0).toUpperCase();
+  document.getElementById('sidebar-avatar').textContent = initial;
+  document.getElementById('topnav-avatar').textContent = initial;
+  document.getElementById('sidebar-role').textContent = userData.role === 'faculty'
+    ? 'Teacher'
+    : `Student · Grade ${userData.gradeLevel || '6'}`;
+}
+
+// ─── DASHBOARD UPDATE ─────────────────────────────────────────
+function updateDashboard() {
+  // Header
+  document.getElementById('username').textContent = userData.username || 'Student';
+  document.getElementById('total-points').textContent = userData.points || 0;
+  document.getElementById('badges-count').textContent = (userData.badges || []).length;
+  document.getElementById('lessons-completed').textContent = userData.lessonsCompleted || 0;
+
+  // Lesson progress bars
+  const progressMap = { math: userData.mathProgress||0, science: userData.scienceProgress||0, geometry: userData.geometryProgress||0, physics: userData.physicsProgress||0, memory: userData.memoryProgress||0 };
+  Object.entries(progressMap).forEach(([lesson, pct]) => {
+    const bar = document.querySelector(`.progress-fill[data-lesson="${lesson}"]`);
+    if (bar) bar.style.width = pct + '%';
+    const label = document.getElementById(`${lesson}-pct`);
+    if (label) label.textContent = pct + '%';
+  });
+
+  // Subject scores
+  const scores = getSubjectScores();
+  ['math','science','english'].forEach(s => {
+    const el = document.getElementById(`${s}-score-display`);
+    if (el) el.textContent = scores[s] || 0;
+  });
+
+  // Activity count
+  const activities = JSON.parse(localStorage.getItem('eduquest_activity') || '[]');
+  const actEl = document.getElementById('activity-count');
+  if (actEl) actEl.textContent = activities.length;
+
+  // Badges
+  updateBadges();
+
+  // Continue learning
+  updateContinueLearning();
+
+  // Sidebar
+  updateSidebar();
+
+  // Daily goal
+  loadDailyGoal();
+}
+
+function updateBadges() {
+  const earned = userData.badges || [];
+  document.querySelectorAll('.badge-card').forEach(card => {
+    const badge = card.dataset.badge;
+    if (earned.includes(badge)) {
+      card.classList.remove('locked');
+      card.classList.add('unlocked');
+    }
+  });
+}
+
+function updateContinueLearning() {
+  const container = document.getElementById('continue-learning-list');
+  if (!container) return;
+  const lessons = [
+    { key: 'math', label: 'Mathematics Puzzle', icon: '➕', pct: userData.mathProgress||0 },
+    { key: 'science', label: 'Science Quiz', icon: '🔬', pct: userData.scienceProgress||0 },
+    { key: 'memory', label: 'Memory Match', icon: '🧠', pct: userData.memoryProgress||0 }
+  ].filter(l => l.pct > 0 && l.pct < 100);
+
+  if (lessons.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:12px 0;">Complete a lesson to track your progress here.</p>';
+    return;
+  }
+  container.innerHTML = lessons.map(l => `
+    <div class="continue-card" onclick="showGameStart('${l.key}')">
+      <div style="font-size:1.5rem;">${l.icon}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700; font-size:0.9rem; margin-bottom:6px;">${l.label}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${l.pct}%"></div></div>
+      </div>
+      <span style="color:var(--primary); font-weight:700; font-size:0.85rem;">${l.pct}%</span>
+      <span style="color:var(--text-muted);">→</span>
+    </div>
+  `).join('');
+}
+
+// ─── STUDENT PORTAL ───────────────────────────────────────────
+let studentChart = null;
+
+function initStudentPortal() {
+  renderRecentActivity();
+  renderStudentAnnouncements();
+  loadDailyGoal();
+
+  // Chart
+  const ctx = document.getElementById('math-score-display');
+  // Scores are shown in stat cards; no canvas needed here
+}
+
+function getSubjectScores() {
+  try { return JSON.parse(localStorage.getItem('eduquest_scores') || '{}'); } catch { return {}; }
+}
+function setSubjectScore(subject, value) {
+  const store = getSubjectScores();
+  store[subject] = Math.round(Math.max(0, Math.min(100, value)));
+  localStorage.setItem('eduquest_scores', JSON.stringify(store));
+  // Update display
+  const el = document.getElementById(`${subject}-score-display`);
+  if (el) el.textContent = store[subject];
+}
+
+function loadDailyGoal() {
+  const today = new Date().toDateString();
+  let goal = JSON.parse(localStorage.getItem('eduquest_daily_goal') || 'null') || { target:5, done:0, text:'Solve 5 problems today', date:today };
+  if (goal.date !== today) { goal.done = 0; goal.date = today; }
+  const pct = Math.min(100, (goal.done / goal.target) * 100);
+  const textEl = document.getElementById('goal-text');
+  const doneEl = document.getElementById('daily-goal-done');
+  const tgtEl  = document.getElementById('daily-goal-target');
+  const fillEl = document.getElementById('daily-goal-fill');
+  if (textEl) textEl.textContent = goal.text;
+  if (doneEl) doneEl.textContent = goal.done;
+  if (tgtEl)  tgtEl.textContent  = goal.target;
+  if (fillEl) fillEl.style.width = pct + '%';
+  localStorage.setItem('eduquest_daily_goal', JSON.stringify(goal));
+}
+
+function incrementDailyGoal(amount=1) {
+  const today = new Date().toDateString();
+  let goal = JSON.parse(localStorage.getItem('eduquest_daily_goal') || 'null') || { target:5, done:0, text:'Solve 5 problems today', date:today };
+  if (goal.date !== today) { goal.done = 0; goal.date = today; }
+  goal.done = Math.min(goal.done + amount, goal.target);
+  localStorage.setItem('eduquest_daily_goal', JSON.stringify(goal));
+  loadDailyGoal();
+}
+
+function logActivity(action, subject, details) {
+  const list = JSON.parse(localStorage.getItem('eduquest_activity') || '[]');
+  list.unshift({ ts: Date.now(), action, subject, details });
+  localStorage.setItem('eduquest_activity', JSON.stringify(list.slice(0, 50)));
+  renderRecentActivity();
+}
+
+function renderRecentActivity() {
+  const list = JSON.parse(localStorage.getItem('eduquest_activity') || '[]');
+  const container = document.getElementById('recent-activity-list');
+  if (!container) return;
+  if (list.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:8px 0;">No recent activity. Start a lesson!</p>';
+    return;
+  }
+  container.innerHTML = list.slice(0, 6).map(item => {
+    const d = new Date(item.ts);
+    const rel = getRelativeTime(d);
+    const icons = { Math:'📐', Science:'🔬', English:'📖', Memory:'🧠', Geometry:'📐', Physics:'⚡' };
+    return `<div class="activity-item">
+      <div class="activity-dot" style="background:var(--accent);"></div>
+      <span class="activity-text">${icons[item.subject]||'📚'} <strong>${item.subject}</strong> — ${item.action}: ${item.details}</span>
+      <span class="activity-time">${rel}</span>
+    </div>`;
+  }).join('');
+}
+
+function getRelativeTime(date) {
+  const diff = (Date.now() - date.getTime()) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+function renderStudentAnnouncements() {
+  const list = JSON.parse(localStorage.getItem('eduquest_announcements') || '[]');
+  const container = document.getElementById('student-announcements-list');
+  const header = document.getElementById('announcements-section-header');
+  if (!container) return;
+  const myName = userData.username || '';
+  const relevant = list.filter(a => a.audience === 'all' || (a.audience === 'student' && (!a.target || a.target === myName)));
+  if (header) header.style.display = relevant.length ? '' : 'none';
+  container.innerHTML = relevant.slice(-5).reverse().map(a =>
+    `<div class="activity-item">
+      <div class="activity-dot" style="background:var(--warning);"></div>
+      <span class="activity-text">📢 <strong>${a.title}</strong>: ${a.message}</span>
+      <span class="activity-time">Notice</span>
+    </div>`
+  ).join('');
+}
+
+// ─── LESSON/GAME LAUNCHER ────────────────────────────────────
+function startLesson(lessonType) {
+  document.getElementById('game-title').textContent = {
+    math:'Math Puzzle', science:'Science Quiz', geometry:'Geometry Drill',
+    physics:'Physics Rapid-Fire', memory:'Memory Match'
+  }[lessonType] || 'Game';
+
+  // Timer pill visibility
+  const timerPill = document.getElementById('timer-pill');
+  timerPill.style.display = (lessonType === 'math' || lessonType === 'physics') ? 'flex' : 'none';
+
+  // Reset score display
+  document.getElementById('game-score').textContent = '0';
+  document.getElementById('game-progress-fill').style.width = '0%';
+
+  const sections = ['math-game-section','science-quiz-section','geometry-game-section','physics-game-section','memory-game-section'];
+  sections.forEach(s => { const el = document.getElementById(s); if (el) el.style.display = 'none'; });
+
+  if (lessonType === 'math') {
+    document.getElementById('math-game-section').style.display = 'block';
+    initMathQuiz();
+  } else if (lessonType === 'memory') {
+    document.getElementById('memory-game-section').style.display = 'block';
+    initMemoryGame();
+  } else if (lessonType === 'science') {
+    document.getElementById('science-quiz-section').style.display = 'block';
+    initScienceQuiz();
+  } else if (lessonType === 'geometry') {
+    document.getElementById('geometry-game-section').style.display = 'block';
+    initGeometryDrill();
+  } else if (lessonType === 'physics') {
+    document.getElementById('physics-game-section').style.display = 'block';
+    initPhysicsRapidFire();
+  }
+}
+
+// ─── MATH QUIZ (from game.js style) ──────────────────────────
+const mathQuestions = [
+  { question:"What is 7 × 8?", options:["54","56","64","72"], answer:1 },
+  { question:"Solve: 15 + 23", options:["38","37","36","35"], answer:0 },
+  { question:"What is ¾ of 20?", options:["12","15","10","5"], answer:1 },
+  { question:"Calculate: 5² + 3³", options:["32","34","52","54"], answer:2 },
+  { question:"If x = 5, what is 2x + 3?", options:["10","13","15","18"], answer:1 },
+  { question:"What is the square root of 144?", options:["12","14","16","18"], answer:0 },
+  { question:"Solve: 45 ÷ 9", options:["4","5","6","7"], answer:1 },
+  { question:"What is 30% of 50?", options:["10","15","20","25"], answer:1 },
+  { question:"Calculate: 7 × 6 - 8", options:["34","36","38","40"], answer:0 },
+  { question:"What is the next number: 2, 4, 8, 16, ?", options:["24","28","32","36"], answer:2 }
+];
+let mathState = { questions:[], idx:0, score:0, timer:60, timerInterval:null, correctAnswers:0 };
+
+function initMathQuiz() {
+  mathState = { questions: [...mathQuestions].sort(() => Math.random()-0.5), idx:0, score:0, timer:60, timerInterval:null, correctAnswers:0 };
+  document.getElementById('game-score').textContent = '0';
+  document.getElementById('game-timer').textContent = '60';
+  startMathTimer();
+  loadMathQuestion();
+}
+
+function loadMathQuestion() {
+  if (mathState.idx >= mathState.questions.length) { endMathGame(); return; }
+  const q = mathState.questions[mathState.idx];
+  document.getElementById('math-question').textContent = q.question;
+  document.getElementById('math-q-num').textContent = `Question ${mathState.idx+1} of ${mathState.questions.length}`;
+  document.getElementById('game-progress-fill').style.width = ((mathState.idx / mathState.questions.length) * 100) + '%';
+  const opts = document.getElementById('math-options');
+  opts.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt;
+    btn.dataset.index = i;
+    opts.appendChild(btn);
+  });
+  const fb = document.getElementById('math-feedback');
+  fb.style.display = 'none'; fb.className = 'game-feedback';
+}
+
+function handleMathAnswer(selectedIndex) {
+  const q = mathState.questions[mathState.idx];
+  const options = document.querySelectorAll('#math-options .option-btn');
+  const fb = document.getElementById('math-feedback');
+  options.forEach(b => b.disabled = true);
+
+  if (selectedIndex === q.answer) {
+    options[selectedIndex].classList.add('correct');
+    fb.textContent = '✓ Correct! +10 points';
+    fb.className = 'game-feedback correct';
+    mathState.score += 10;
+    mathState.correctAnswers++;
+    document.getElementById('game-score').textContent = mathState.score;
+    incrementDailyGoal(1);
+  } else {
+    options[selectedIndex].classList.add('incorrect');
+    options[q.answer].classList.add('correct');
+    fb.textContent = `✗ Incorrect! Answer: ${q.options[q.answer]}`;
+    fb.className = 'game-feedback incorrect';
+  }
+  fb.style.display = 'block';
+  setTimeout(() => { mathState.idx++; loadMathQuestion(); }, 1500);
+}
+
+function startMathTimer() {
+  clearInterval(mathState.timerInterval);
+  mathState.timerInterval = setInterval(() => {
+    mathState.timer--;
+    document.getElementById('game-timer').textContent = mathState.timer;
+    if (mathState.timer <= 0) endMathGame();
+  }, 1000);
+}
+
+function endMathGame() {
+  clearInterval(mathState.timerInterval);
+  userData.points += mathState.score;
+  userData.mathProgress = 100;
+  userData.lessonsCompleted++;
+  const badge = mathState.correctAnswers >= mathState.questions.length * 0.8 ? 'math_master' : 'math';
+  awardBadge(badge);
+  setSubjectScore('math', Math.round((mathState.correctAnswers / mathState.questions.length) * 100));
+  logActivity('Completed', 'Math', `Score ${mathState.score}`);
+  saveUserData();
+  showResults(mathState.score, mathState.correctAnswers, mathState.questions.length, badge);
+}
+
+// ─── RESULTS SCREEN ──────────────────────────────────────────
+function showResults(score, correct, total, badge) {
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('correct-answers').textContent = correct;
+  document.getElementById('total-questions').textContent = total;
+
+  const pct = total > 0 ? correct / total : 0;
+  let emoji = '😊', title = 'Good effort!', subtitle = 'Keep practicing to improve.';
+  if (pct >= 0.8) { emoji='🏆'; title='Outstanding!'; subtitle='You\'re a true champion!'; }
+  else if (pct >= 0.6) { emoji='⭐'; title='Great job!'; subtitle='You\'re doing really well!'; }
+
+  document.getElementById('results-emoji').textContent = emoji;
+  document.getElementById('results-title').textContent = title;
+  document.getElementById('results-subtitle').textContent = subtitle;
+
+  const badgeBox = document.getElementById('badge-earned');
+  if (badge && (userData.badges||[]).includes(badge)) {
+    const badgeNames = { math_master:'Math Master', math:'Math Whiz', science:'Science Explorer', memory:'Memory Master', geometry:'Geo Pro', physics:'Physics Ace' };
+    document.getElementById('badge-name').textContent = badgeNames[badge] || badge;
+    badgeBox.classList.remove('hidden');
+  } else {
+    badgeBox.classList.add('hidden');
+  }
+
+  document.getElementById('game-active-area').style.display = 'none';
+  document.getElementById('game-start-screen').style.display = 'none';
+  document.getElementById('results-screen').classList.add('active');
+
+  updateDashboard();
+}
+
+// ─── BADGE & SCORE HELPERS ────────────────────────────────────
+function awardBadge(type) {
+  if (!userData.badges) userData.badges = [];
+  if (!userData.badges.includes(type)) {
+    userData.badges.push(type);
+    toast(`🏅 Badge Unlocked: ${type.replace('_',' ')}!`, 'success');
+  }
+}
+
+// ─── DATA PERSISTENCE ─────────────────────────────────────────
+function saveUserData() { localStorage.setItem('eduquest_user', JSON.stringify(userData)); }
+function loadUserData() {
+  const stored = localStorage.getItem('eduquest_user');
+  if (stored) try { userData = { ...userData, ...JSON.parse(stored) }; } catch(e) {}
+}
+
+function updateUserProgress(score, badgeEarned) {
+  userData.points = (userData.points || 0) + score;
+  if (badgeEarned) awardBadge(badgeEarned.id || badgeEarned);
+  saveUserData();
+  updateDashboard();
+}
+
+function exportUserData() {
+  const dataStr = JSON.stringify({ ...userData, scores: getSubjectScores(), activity: JSON.parse(localStorage.getItem('eduquest_activity')||'[]') }, null, 2);
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+  a.download = `eduquest_${userData.username || 'student'}_progress.json`;
+  a.click();
+  toast('Progress exported!', 'success');
+}
+
+function importUserData() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        userData = { ...userData, ...imported };
+        saveUserData(); updateDashboard();
+        toast('Progress imported successfully!', 'success');
+      } catch { toast('Invalid file format', 'error'); }
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  input.click();
+}
+
+// ─── UPLOAD MODAL ─────────────────────────────────────────────
+function openUploadModal() { document.getElementById('upload-modal').classList.add('show'); }
+function closeUploadModal() {
+  document.getElementById('upload-modal').classList.remove('show');
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('confirm-upload').disabled = true;
+  document.getElementById('file-input').value = '';
+}
+
+function handleFiles(files) {
+  if (!files.length) return;
+  const file = files[0];
+  const preview = document.getElementById('upload-preview');
+  preview.style.display = 'block';
+  preview.querySelector('.file-name').textContent = file.name;
+  preview.querySelector('.file-size').textContent = formatFileSize(file.size);
+  const confirm = document.getElementById('confirm-upload');
+  confirm.disabled = false;
+  preview.querySelector('.remove-file').onclick = () => { preview.style.display='none'; confirm.disabled=true; };
+  confirm.onclick = () => {
+    addMaterialToGrid(file.name, formatFileSize(file.size));
+    closeUploadModal();
+    toast('Material uploaded!', 'success');
+  };
+}
+
+function addMaterialToGrid(name, size) {
+  const grid = document.getElementById('materials-grid');
+  if (!grid) return;
+  const ext = name.split('.').pop().toUpperCase();
+  const card = document.createElement('div');
+  card.className = 'material-card';
+  card.innerHTML = `<div class="material-thumb">📄</div>
+    <div class="material-info">
+      <h4>${name.split('.')[0]}</h4>
+      <p>Uploaded material</p>
+      <div class="material-meta">
+        <span class="chip chip-primary">${ext}</span>
+        <span class="text-xs text-muted">${size}</span>
+      </div>
+    </div>`;
+  grid.appendChild(card);
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1048576).toFixed(1) + ' MB';
+}
+
+// ─── TOAST ────────────────────────────────────────────────────
+function toast(msg, type='info') {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✓':type==='error'?'✗':'ℹ'}</span> ${msg}`;
+  container.appendChild(el);
+  setTimeout(() => { el.remove(); }, 3200);
+}
+
+// ─── TEACHER DASHBOARD ────────────────────────────────────────
+function initTeacherDashboard() {
+  const users = JSON.parse(localStorage.getItem('eduquest_users') || '[]');
+  const students = users.filter(u => u.role === 'student');
+  const totalPts = students.reduce((s, u) => s + (u.points||0), 0);
+  const avgScore = students.length ? Math.round(totalPts / students.length) : 0;
+  const totalLessons = students.reduce((s, u) => s + (u.lessonsCompleted||0), 0);
+  const totalBadges = students.reduce((s, u) => s + (u.badges||[]).length, 0);
+
+  document.getElementById('teacher-total-students').textContent = students.length;
+  document.getElementById('teacher-avg-score').textContent = avgScore;
+  document.getElementById('teacher-lessons-done').textContent = totalLessons;
+  document.getElementById('teacher-badges').textContent = totalBadges;
+
+  renderStudentList(students);
+  renderTeacherCharts(students);
+}
+
+function renderStudentList(students) {
+  const container = document.getElementById('students-list');
+  if (!container) return;
+  if (!students.length) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:12px 0;">No student data yet. Students need to register first.</p>';
+    return;
+  }
+  container.innerHTML = students.map(s => {
+    const init = (s.username||'S').charAt(0).toUpperCase();
+    return `<div class="student-row">
+      <div class="student-avatar-sm">${init}</div>
+      <div class="student-info">
+        <div class="student-name">${s.username||'Student'}</div>
+        <div class="student-meta">Grade ${s.gradeLevel||'-'} · ${(s.badges||[]).length} badges · ${s.lessonsCompleted||0} lessons</div>
+      </div>
+      <div class="student-score">${s.points||0} pts</div>
+    </div>`;
+  }).join('');
+}
+
+let teacherCharts = {};
+function renderTeacherCharts(students) {
+  // Destroy existing
+  Object.values(teacherCharts).forEach(c => c.destroy());
+  teacherCharts = {};
+
+  const chartDefaults = {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family:'Plus Jakarta Sans', size:11 } } }, x: { grid: { display:false }, ticks: { font: { family:'Plus Jakarta Sans', size:11 } } } }
+  };
+
+  // Average scores bar chart
+  const scoresCtx = document.getElementById('scores-chart');
+  if (scoresCtx) {
+    teacherCharts.scores = new Chart(scoresCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Math', 'Science', 'English'],
+        datasets: [{ label:'Avg Score', data: [
+          Math.round(students.reduce((a,s)=>a+(s.mathProgress||0),0)/Math.max(1,students.length)),
+          Math.round(students.reduce((a,s)=>a+(s.scienceProgress||0),0)/Math.max(1,students.length)),
+          Math.round(students.reduce((a,s)=>a+(s.memoryProgress||0),0)/Math.max(1,students.length))
+        ], backgroundColor: ['rgba(91,94,244,0.8)','rgba(0,201,167,0.8)','rgba(245,158,11,0.8)'], borderRadius:8, borderSkipped:false }]
+      },
+      options: { ...chartDefaults, plugins: { ...chartDefaults.plugins } }
+    });
+  }
+
+  // Completion doughnut
+  const compCtx = document.getElementById('completion-chart');
+  if (compCtx) {
+    const done = students.filter(s => (s.lessonsCompleted||0) >= 1).length;
+    teacherCharts.completion = new Chart(compCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Completed ≥1', 'Not Started'],
+        datasets: [{ data: [done, Math.max(0, students.length - done)], backgroundColor: ['rgba(16,185,129,0.85)','rgba(226,232,240,0.9)'], borderWidth:0, hoverOffset:4 }]
+      },
+      options: { responsive:true, plugins: { legend: { display:true, position:'bottom', labels:{ font:{ family:'Plus Jakarta Sans' } } } }, cutout:'70%' }
+    });
+  }
+
+  // Badges bar
+  const badgesCtx = document.getElementById('badges-chart');
+  if (badgesCtx) {
+    const badgeCounts = {};
+    students.forEach(s => (s.badges||[]).forEach(b => badgeCounts[b] = (badgeCounts[b]||0)+1));
+    teacherCharts.badges = new Chart(badgesCtx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(badgeCounts).map(b => b.replace('_',' ')),
+        datasets: [{ data: Object.values(badgeCounts), backgroundColor:'rgba(91,94,244,0.75)', borderRadius:6, borderSkipped:false }]
+      },
+      options: { ...chartDefaults, indexAxis:'y', plugins: { legend:{ display:false } } }
+    });
+  }
+}
+
+function handleTeacherUpload(e) {
+  const files = e.target.files;
+  const container = document.getElementById('uploaded-files');
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        // Update local users store with uploaded data
+        let users = JSON.parse(localStorage.getItem('eduquest_users') || '[]');
+        const existing = users.findIndex(u => u.phone === data.phone || u.email === data.email);
+        if (existing >= 0) users[existing] = { ...users[existing], ...data };
+        else users.push(data);
+        localStorage.setItem('eduquest_users', JSON.stringify(users));
+        toast(`Loaded ${data.username || file.name}`, 'success');
+        initTeacherDashboard();
+      } catch { toast('Invalid JSON file', 'error'); }
+    };
+    reader.readAsText(file);
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:8px 12px; background:var(--success-light); border-radius:var(--radius); margin-top:8px; font-size:0.82rem; color:var(--success); font-weight:600;';
+    div.textContent = '✓ ' + file.name;
+    container.appendChild(div);
+  });
+}
+
+function postAnnouncement() {
+  const title = document.getElementById('ann-title').value.trim();
+  const audience = document.getElementById('ann-audience').value;
+  const target = document.getElementById('ann-target').value.trim();
+  const message = document.getElementById('ann-message').value.trim();
+  if (!title || !message) { toast('Please fill in title and message', 'error'); return; }
+  const list = JSON.parse(localStorage.getItem('eduquest_announcements') || '[]');
+  list.push({ title, audience, target, message, ts: Date.now() });
+  localStorage.setItem('eduquest_announcements', JSON.stringify(list));
+  document.getElementById('ann-title').value = '';
+  document.getElementById('ann-message').value = '';
+  document.getElementById('ann-target').value = '';
+  toast('Announcement posted!', 'success');
+}
+
+// ─── SCIENCE QUIZ ─────────────────────────────────────────────
+const scienceQuestions = [
+  { q:'What gas do plants absorb for photosynthesis?', options:['Oxygen','Nitrogen','Carbon dioxide','Hydrogen'], a:2 },
+  { q:'What is H₂O commonly known as?', options:['Salt','Water','Acid','Alcohol'], a:1 },
+  { q:'Which planet is known as the Red Planet?', options:['Venus','Mars','Jupiter','Mercury'], a:1 },
+  { q:'What force pulls objects towards Earth?', options:['Magnetism','Friction','Gravity','Inertia'], a:2 },
+  { q:'What part of the cell contains DNA?', options:['Cytoplasm','Nucleus','Membrane','Ribosome'], a:1 },
+  { q:'Which energy is stored in food?', options:['Kinetic','Potential','Chemical','Thermal'], a:2 },
+  { q:'Boiling point of water at sea level?', options:['90°C','95°C','100°C','110°C'], a:2 },
+  { q:'Which organ pumps blood?', options:['Lungs','Heart','Brain','Liver'], a:1 },
+  { q:'Symbol for Sodium?', options:['So','Sd','Na','Sn'], a:2 },
+  { q:'Animals that eat only plants are called?', options:['Carnivores','Herbivores','Omnivores','Detritivores'], a:1 }
+];
+let sciState = { idx:0, score:0, answered:false };
+
+function initScienceQuiz() {
+  sciState = { idx:0, score:0, answered:false };
+  document.getElementById('science-score').textContent = '0';
+  document.getElementById('science-qnum').textContent = '1';
+  document.getElementById('science-qtotal').textContent = scienceQuestions.length;
+  document.getElementById('science-feedback').style.display = 'none';
+  document.getElementById('science-complete').style.display = 'none';
+  renderScienceQuestion();
+  document.getElementById('science-restart').onclick = () => { initScienceQuiz(); };
+  document.getElementById('science-next').onclick = () => {
+    sciState.idx++;
+    if (sciState.idx >= scienceQuestions.length) { completeScienceQuiz(); return; }
+    sciState.answered = false;
+    document.getElementById('science-feedback').style.display = 'none';
+    document.getElementById('science-qnum').textContent = sciState.idx + 1;
+    document.getElementById('game-progress-fill').style.width = ((sciState.idx / scienceQuestions.length) * 100) + '%';
+    renderScienceQuestion();
+  };
+}
+
+function renderScienceQuestion() {
+  const q = scienceQuestions[sciState.idx];
+  document.getElementById('science-question').textContent = q.q;
+  const opts = document.getElementById('science-options');
+  opts.innerHTML = '';
+  q.options.forEach((text, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = text;
+    btn.onclick = () => handleSciAnswer(i, btn, q);
+    opts.appendChild(btn);
+  });
+}
+
+function handleSciAnswer(choice, btn, q) {
+  if (sciState.answered) return;
+  sciState.answered = true;
+  const opts = document.querySelectorAll('#science-options .option-btn');
+  opts.forEach(b => b.disabled = true);
+  const fb = document.getElementById('science-feedback');
+  const ft = document.getElementById('science-feedback-text');
+  if (choice === q.a) {
+    btn.classList.add('correct');
+    sciState.score += 10;
+    document.getElementById('science-score').textContent = sciState.score;
+    ft.textContent = '✓ Correct! +10 points';
+    fb.className = 'game-feedback correct';
+    incrementDailyGoal(1);
+  } else {
+    btn.classList.add('incorrect');
+    opts[q.a].classList.add('correct');
+    ft.textContent = `✗ Incorrect! Answer: ${q.options[q.a]}`;
+    fb.className = 'game-feedback incorrect';
+  }
+  fb.style.display = 'block';
+}
+
+function completeScienceQuiz() {
+  userData.points += sciState.score;
+  userData.scienceProgress = 100;
+  userData.lessonsCompleted++;
+  awardBadge('science');
+  setSubjectScore('science', Math.round((sciState.score / (scienceQuestions.length * 10)) * 100));
+  logActivity('Completed', 'Science', `Score ${sciState.score}/${scienceQuestions.length * 10}`);
+  saveUserData();
+  document.getElementById('science-complete-text').textContent = `Well done! You scored ${sciState.score} out of ${scienceQuestions.length * 10}.`;
+  document.getElementById('science-complete').style.display = 'block';
+  document.getElementById('science-feedback').style.display = 'none';
+  setTimeout(() => showResults(sciState.score, sciState.score/10, scienceQuestions.length, 'science'), 2000);
+}
+
+// ─── GEOMETRY DRILL ───────────────────────────────────────────
+const geometryQuestions = [
+  { q:'Sum of interior angles of a triangle?', options:['90°','180°','270°','360°'], a:1 },
+  { q:'Area of rectangle l×w. For l=8, w=5?', options:['30','35','40','45'], a:2 },
+  { q:'Perimeter of square side 6?', options:['18','20','22','24'], a:3 },
+  { q:'Right triangle sides 3,4,? (hypotenuse)', options:['5','6','7','8'], a:0 },
+  { q:'Number of sides in a hexagon?', options:['5','6','7','8'], a:1 }
+];
+let geoState = { idx:0, score:0, answered:false };
+
+function initGeometryDrill() {
+  geoState = { idx:0, score:0, answered:false };
+  document.getElementById('geometry-score').textContent = '0';
+  document.getElementById('geometry-qnum').textContent = '1';
+  document.getElementById('geometry-qtotal').textContent = geometryQuestions.length;
+  document.getElementById('geometry-feedback').style.display = 'none';
+  document.getElementById('geometry-complete').style.display = 'none';
+  renderGeometryQuestion();
+  document.getElementById('geometry-restart').onclick = initGeometryDrill;
+  document.getElementById('geometry-next').onclick = () => {
+    geoState.idx++;
+    if (geoState.idx >= geometryQuestions.length) { completeGeometry(); return; }
+    geoState.answered = false;
+    document.getElementById('geometry-feedback').style.display = 'none';
+    document.getElementById('geometry-qnum').textContent = geoState.idx + 1;
+    document.getElementById('game-progress-fill').style.width = ((geoState.idx / geometryQuestions.length) * 100) + '%';
+    renderGeometryQuestion();
+  };
+}
+
+function renderGeometryQuestion() {
+  const q = geometryQuestions[geoState.idx];
+  document.getElementById('geometry-question').textContent = q.q;
+  const opts = document.getElementById('geometry-options');
+  opts.innerHTML = '';
+  q.options.forEach((text, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = text;
+    btn.onclick = () => handleGeoAnswer(i, btn, q);
+    opts.appendChild(btn);
+  });
+}
+
+function handleGeoAnswer(choice, btn, q) {
+  if (geoState.answered) return;
+  geoState.answered = true;
+  const opts = document.querySelectorAll('#geometry-options .option-btn');
+  opts.forEach(b => b.disabled = true);
+  const fb = document.getElementById('geometry-feedback');
+  const ft = document.getElementById('geometry-feedback-text');
+  if (choice === q.a) {
+    btn.classList.add('correct');
+    geoState.score += 10;
+    document.getElementById('geometry-score').textContent = geoState.score;
+    ft.textContent = '✓ Correct! +10 points';
+    fb.className = 'game-feedback correct';
+    incrementDailyGoal(1);
+  } else {
+    btn.classList.add('incorrect');
+    opts[q.a].classList.add('correct');
+    ft.textContent = `✗ Incorrect! Answer: ${q.options[q.a]}`;
+    fb.className = 'game-feedback incorrect';
+  }
+  fb.style.display = 'block';
+}
+
+function completeGeometry() {
+  userData.points += geoState.score;
+  userData.geometryProgress = 100;
+  userData.lessonsCompleted++;
+  awardBadge('geometry');
+  setSubjectScore('math', Math.round((geoState.score / (geometryQuestions.length * 10)) * 100));
+  logActivity('Completed', 'Geometry', `Score ${geoState.score}/${geometryQuestions.length * 10}`);
+  saveUserData();
+  document.getElementById('geometry-complete-text').textContent = `Well done! You scored ${geoState.score} out of ${geometryQuestions.length * 10}.`;
+  document.getElementById('geometry-complete').style.display = 'block';
+  document.getElementById('geometry-feedback').style.display = 'none';
+  setTimeout(() => showResults(geoState.score, geoState.score/10, geometryQuestions.length, 'geometry'), 2000);
+}
+
+// ─── PHYSICS RAPID-FIRE ───────────────────────────────────────
+const physicsQuestions = [
+  { q:'SI unit of force?', options:['Joule','Newton','Watt','Pascal'], a:1 },
+  { q:'Energy of motion is called?', options:['Potential','Kinetic','Thermal','Electrical'], a:1 },
+  { q:'Speed = distance / ?', options:['Power','Time','Mass','Force'], a:1 },
+  { q:'1 kilowatt-hour is a unit of?', options:['Power','Energy','Force','Charge'], a:1 },
+  { q:'Which travels fastest?', options:['Sound','Water wave','Light','Seismic wave'], a:2 }
+];
+let phyState = { idx:0, score:0, answering:false, timerId:null, timeLeft:45 };
+
+function initPhysicsRapidFire() {
+  if (phyState.timerId) clearInterval(phyState.timerId);
+  phyState = { idx:0, score:0, answering:false, timerId:null, timeLeft:45 };
+  document.getElementById('physics-score').textContent = '0';
+  document.getElementById('physics-time').textContent = '45';
+  document.getElementById('physics-complete').style.display = 'none';
+  renderPhysicsQuestion();
+  phyState.timerId = setInterval(() => {
+    phyState.timeLeft--;
+    document.getElementById('physics-time').textContent = phyState.timeLeft;
+    if (phyState.timeLeft <= 0) { clearInterval(phyState.timerId); completePhysics(); }
+  }, 1000);
+  document.getElementById('physics-restart').onclick = initPhysicsRapidFire;
+}
+
+function renderPhysicsQuestion() {
+  const q = physicsQuestions[phyState.idx % physicsQuestions.length];
+  document.getElementById('physics-question').textContent = q.q;
+  const opts = document.getElementById('physics-options');
+  opts.innerHTML = '';
+  q.options.forEach((text, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = text;
+    btn.onclick = () => handlePhyAnswer(i, btn, q);
+    opts.appendChild(btn);
+  });
+}
+
+function handlePhyAnswer(choice, btn, q) {
+  if (phyState.answering) return;
+  phyState.answering = true;
+  const opts = document.querySelectorAll('#physics-options .option-btn');
+  opts.forEach(b => b.disabled = true);
+  if (choice === q.a) {
+    btn.classList.add('correct');
+    phyState.score += 5;
+    document.getElementById('physics-score').textContent = phyState.score;
+    incrementDailyGoal(1);
+  } else {
+    btn.classList.add('incorrect');
+    opts[q.a].classList.add('correct');
+  }
+  setTimeout(() => { phyState.idx++; phyState.answering = false; if (phyState.timeLeft > 0) renderPhysicsQuestion(); }, 700);
+}
+
+function completePhysics() {
+  userData.points += phyState.score;
+  userData.physicsProgress = 100;
+  userData.lessonsCompleted++;
+  awardBadge('physics');
+  logActivity('Completed', 'Physics', `Score ${phyState.score} pts in 45s`);
+  saveUserData();
+  document.getElementById('physics-complete-text').textContent = `Time's Up! You scored ${phyState.score} points.`;
+  document.getElementById('physics-complete').style.display = 'block';
+  setTimeout(() => showResults(phyState.score, Math.round(phyState.score/5), physicsQuestions.length, 'physics'), 2000);
+}
+
+// ─── MEMORY MATCH ─────────────────────────────────────────────
+const vocabularyPairs = [
+  { id:'amiable',     front:'Amiable',     match:'Friendly or pleasant' },
+  { id:'meticulous',  front:'Meticulous',  match:'Very careful and precise' },
+  { id:'innovate',    front:'Innovate',    match:'Introduce new ideas or methods' },
+  { id:'vivid',       front:'Vivid',       match:'Bright, clear, and detailed' },
+  { id:'empathy',     front:'Empathy',     match:"Understanding others' feelings" },
+  { id:'resilient',   front:'Resilient',   match:'Able to recover quickly' },
+  { id:'chronology',  front:'Chronology',  match:'Order of events in time' },
+  { id:'artifact',    front:'Artifact',    match:'Object from the past made by people' },
+  { id:'habitat',     front:'Habitat',     match:'Natural home of an organism' },
+  { id:'perimeter',   front:'Perimeter',   match:'Distance around a shape' }
+];
+let memState = { firstCard:null, lockBoard:false, moves:0, matches:0 };
+
+function initMemoryGame() {
+  memState = { firstCard:null, lockBoard:false, moves:0, matches:0 };
+  document.getElementById('memory-moves').textContent = '0';
+  document.getElementById('memory-matches').textContent = '0';
+  document.getElementById('memory-complete').style.display = 'none';
+  const grid = document.getElementById('memory-grid');
+  grid.innerHTML = '';
+
+  const deck = [];
+  vocabularyPairs.forEach(p => {
+    deck.push({ key:p.id, type:'word', text:p.front });
+    deck.push({ key:p.id, type:'def',  text:p.match });
+  });
+  for (let i = deck.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  deck.forEach(card => {
+    const el = document.createElement('button');
+    el.className = `memory-card ${card.type === 'word' ? 'is-word' : 'is-def'}`;
+    el.dataset.key = card.key;
+    el.dataset.type = card.type;
+    el.innerHTML = `<span class="card-front">${card.text}</span><span class="card-back">?</span>`;
+    el.addEventListener('click', () => flipMemCard(el));
+    grid.appendChild(el);
+  });
+  document.getElementById('memory-restart').onclick = initMemoryGame;
+}
+
+function flipMemCard(el) {
+  if (memState.lockBoard || el.classList.contains('matched') || el === memState.firstCard) return;
+  el.classList.add('flipped');
+  if (!memState.firstCard) { memState.firstCard = el; return; }
+  memState.moves++;
+  document.getElementById('memory-moves').textContent = memState.moves;
+  const isMatch = el.dataset.key === memState.firstCard.dataset.key && el.dataset.type !== memState.firstCard.dataset.type;
+  if (isMatch) {
+    el.classList.add('matched');
+    memState.firstCard.classList.add('matched');
+    memState.matches++;
+    document.getElementById('memory-matches').textContent = memState.matches;
+    showMatchCheck(memState.firstCard, el);
+    memState.firstCard = null;
+    if (memState.matches === vocabularyPairs.length) {
+      userData.points += 20;
+      userData.memoryProgress = 100;
+      userData.lessonsCompleted++;
+      awardBadge('memory');
+      logActivity('Completed', 'Memory', `Matched all pairs in ${memState.moves} moves`);
+      saveUserData();
+      document.getElementById('memory-feedback-text').textContent = `All matched in ${memState.moves} moves! +20 bonus points 🎉`;
+      document.getElementById('memory-complete').style.display = 'block';
+      setTimeout(() => showResults(20, vocabularyPairs.length, vocabularyPairs.length, 'memory'), 2500);
+    }
+  } else {
+    memState.lockBoard = true;
+    setTimeout(() => { el.classList.remove('flipped'); memState.firstCard.classList.remove('flipped'); memState.firstCard=null; memState.lockBoard=false; }, 850);
+  }
+}
+
+function showMatchCheck(a, b) {
+  const check = document.getElementById('match-checkmark');
+  const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+  check.style.left = ((ra.left+ra.right+rb.left+rb.right)/4) + 'px';
+  check.style.top  = ((ra.top+ra.bottom+rb.top+rb.bottom)/4)  + 'px';
+  check.classList.add('show');
+  setTimeout(() => check.classList.remove('show'), 700);
+}
+
+// legacy compat
+function showMatchCheckmarkBetween(a,b) { showMatchCheck(a,b); }
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

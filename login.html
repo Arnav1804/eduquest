@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – EduQuest</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">🎓</div>
+      <h1>EduQuest</h1>
+      <p>Sign in to continue learning</p>
+    </div>
+    <div class="auth-body">
+      <div class="role-tabs">
+        <button class="tab-btn active" data-role="student">🎓 Student</button>
+        <button class="tab-btn" data-role="faculty">👩‍🏫 Teacher</button>
+      </div>
+
+      <form id="student-form" class="form active" novalidate>
+        <div class="field">
+          <label for="student-phone">Phone Number</label>
+          <input id="student-phone" type="tel" placeholder="e.g. 9876543210" class="input">
+        </div>
+        <p id="student-error" style="color:var(--danger); font-size:0.82rem; display:none; margin-bottom:8px;"></p>
+        <div class="actions">
+          <button class="primary-btn" type="submit" style="flex:1; justify-content:center;">Sign In →</button>
+        </div>
+        <p style="text-align:center; margin-top:16px; color:var(--text-muted); font-size:0.85rem;">New here? <a class="link" href="register.html?role=student">Create an account</a></p>
+      </form>
+
+      <form id="faculty-form" class="form" novalidate>
+        <div class="field">
+          <label for="faculty-email">Email Address</label>
+          <input id="faculty-email" type="text" placeholder="name@example.com" class="input">
+        </div>
+        <p id="faculty-error" style="color:var(--danger); font-size:0.82rem; display:none; margin-bottom:8px;"></p>
+        <div class="actions">
+          <button class="primary-btn" type="submit" style="flex:1; justify-content:center;">Sign In →</button>
+        </div>
+        <p style="text-align:center; margin-top:16px; color:var(--text-muted); font-size:0.85rem;">New here? <a class="link" href="register.html?role=faculty">Create an account</a></p>
+      </form>
+
+      <div class="divider"></div>
+      <p style="text-align:center; color:var(--text-muted); font-size:0.8rem;">
+        <a href="index.html" class="link">← Continue as Guest</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tabs = document.querySelectorAll('.tab-btn');
+  const studentForm = document.getElementById('student-form');
+  const facultyForm = document.getElementById('faculty-form');
+
+  // Auto-select role from URL
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('role') === 'faculty') setRole('faculty');
+
+  function setRole(role) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.role === role));
+    if (role === 'student') { studentForm.classList.add('active'); facultyForm.classList.remove('active'); }
+    else { facultyForm.classList.add('active'); studentForm.classList.remove('active'); }
+  }
+  tabs.forEach(t => t.addEventListener('click', () => setRole(t.dataset.role)));
+
+  function getUsers() { try { return JSON.parse(localStorage.getItem('eduquest_users')) || []; } catch { return []; } }
+  function saveUsers(u) { localStorage.setItem('eduquest_users', JSON.stringify(u)); }
+
+  studentForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const phone = document.getElementById('student-phone').value.trim();
+    const err = document.getElementById('student-error');
+    err.style.display = 'none';
+    if (!phone) { err.textContent = 'Please enter your phone number.'; err.style.display = 'block'; return; }
+    let users = getUsers();
+    let user = users.find(u => u.role === 'student' && u.phone === phone);
+    if (!user) {
+      user = { role:'student', username:'Student', phone, gradeLevel:'6', points:0, badges:[], lessonsCompleted:0, mathProgress:0, scienceProgress:0, memoryProgress:0, language:'en' };
+      users.push(user); saveUsers(users);
+    }
+    localStorage.setItem('eduquest_user', JSON.stringify(user));
+    window.location.href = 'index.html';
+  });
+
+  facultyForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('faculty-email').value.trim();
+    const err = document.getElementById('faculty-error');
+    err.style.display = 'none';
+    if (!email) { err.textContent = 'Please enter your email.'; err.style.display = 'block'; return; }
+    let users = getUsers();
+    let user = users.find(u => u.role === 'faculty' && u.email === email);
+    if (!user) {
+      user = { role:'faculty', username:'Teacher', email, phone:'', points:0, badges:[], lessonsCompleted:0, mathProgress:0, scienceProgress:0, memoryProgress:0, language:'en' };
+      users.push(user); saveUsers(users);
+    }
+    localStorage.setItem('eduquest_user', JSON.stringify(user));
+    window.location.href = 'index.html';
+  });
+});
+</script>
+</body>
+</html>

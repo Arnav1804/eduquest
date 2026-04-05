@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register – EduQuest</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="auth-wrapper">
+  <div class="auth-card" style="max-width:580px;">
+    <div class="auth-header">
+      <div class="auth-logo">✨</div>
+      <h1>Create Account</h1>
+      <p>Join EduQuest to start learning</p>
+    </div>
+    <div class="auth-body">
+      <div class="role-tabs">
+        <button class="tab-btn active" data-role="student">🎓 Student</button>
+        <button class="tab-btn" data-role="faculty">👩‍🏫 Teacher</button>
+      </div>
+
+      <form id="student-form" class="form active">
+        <div class="grid-2">
+          <div class="field">
+            <label for="student-name">Full Name</label>
+            <input id="student-name" type="text" placeholder="Your full name" class="input">
+          </div>
+          <div class="field">
+            <label for="student-grade">Grade / Class</label>
+            <select id="student-grade" class="input">
+              <option value="6">Class 6</option>
+              <option value="7">Class 7</option>
+              <option value="8">Class 8</option>
+              <option value="9">Class 9</option>
+              <option value="10">Class 10</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="student-phone">Phone Number</label>
+          <input id="student-phone" type="tel" placeholder="e.g. 9876543210" class="input">
+        </div>
+        <p id="student-error" style="color:var(--danger); font-size:0.82rem; display:none; margin-bottom:8px;"></p>
+        <button class="primary-btn w-full" type="submit" style="justify-content:center;">Create Account →</button>
+        <p style="text-align:center; margin-top:14px; color:var(--text-muted); font-size:0.85rem;">Already have an account? <a class="link" href="login.html">Sign in</a></p>
+      </form>
+
+      <form id="faculty-form" class="form">
+        <div class="grid-2">
+          <div class="field">
+            <label for="faculty-name">Full Name</label>
+            <input id="faculty-name" type="text" placeholder="Your full name" class="input">
+          </div>
+          <div class="field">
+            <label for="faculty-phone">Phone Number</label>
+            <input id="faculty-phone" type="tel" placeholder="e.g. 9876543210" class="input">
+          </div>
+        </div>
+        <div class="field">
+          <label for="faculty-email">Email Address</label>
+          <input id="faculty-email" type="text" placeholder="name@example.com" class="input">
+        </div>
+        <p id="faculty-error" style="color:var(--danger); font-size:0.82rem; display:none; margin-bottom:8px;"></p>
+        <button class="primary-btn w-full" type="submit" style="justify-content:center;">Create Account →</button>
+        <p style="text-align:center; margin-top:14px; color:var(--text-muted); font-size:0.85rem;">Already have an account? <a class="link" href="login.html">Sign in</a></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tabs = document.querySelectorAll('.tab-btn');
+  const studentForm = document.getElementById('student-form');
+  const facultyForm = document.getElementById('faculty-form');
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('role') === 'faculty') setRole('faculty');
+
+  function setRole(role) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.role === role));
+    if (role === 'student') { studentForm.classList.add('active'); facultyForm.classList.remove('active'); }
+    else { facultyForm.classList.add('active'); studentForm.classList.remove('active'); }
+  }
+  tabs.forEach(t => t.addEventListener('click', () => setRole(t.dataset.role)));
+
+  function getUsers() { try { return JSON.parse(localStorage.getItem('eduquest_users')) || []; } catch { return []; } }
+  function saveUsers(u) { localStorage.setItem('eduquest_users', JSON.stringify(u)); }
+
+  studentForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('student-name').value.trim() || 'Student';
+    const grade = document.getElementById('student-grade').value;
+    const phone = document.getElementById('student-phone').value.trim();
+    const err = document.getElementById('student-error'); err.style.display='none';
+    if (!phone) { err.textContent='Phone number is required.'; err.style.display='block'; return; }
+    const users = getUsers();
+    if (users.some(u => u.role==='student' && u.phone===phone)) { err.textContent='Account with this phone already exists.'; err.style.display='block'; return; }
+    const newUser = { role:'student', username:name, phone, gradeLevel:grade, points:0, badges:[], lessonsCompleted:0, mathProgress:0, scienceProgress:0, memoryProgress:0, language:'en' };
+    users.push(newUser); saveUsers(users);
+    localStorage.setItem('eduquest_user', JSON.stringify(newUser));
+    window.location.href = 'index.html';
+  });
+
+  facultyForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('faculty-name').value.trim() || 'Teacher';
+    const phone = document.getElementById('faculty-phone').value.trim();
+    const email = document.getElementById('faculty-email').value.trim();
+    const err = document.getElementById('faculty-error'); err.style.display='none';
+    if (!email) { err.textContent='Email is required.'; err.style.display='block'; return; }
+    const users = getUsers();
+    if (users.some(u => u.role==='faculty' && (u.email===email || (phone && u.phone===phone)))) { err.textContent='Account with this email already exists.'; err.style.display='block'; return; }
+    const newUser = { role:'faculty', username:name, phone, email, points:0, badges:[], lessonsCompleted:0, mathProgress:0, scienceProgress:0, memoryProgress:0, language:'en' };
+    users.push(newUser); saveUsers(users);
+    localStorage.setItem('eduquest_user', JSON.stringify(newUser));
+    window.location.href = 'index.html';
+  });
+});
+</script>
+</body>
+</html>
