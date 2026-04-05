@@ -3,11 +3,11 @@
 const CACHE_NAME = 'eduquest-v1';
 const urlsToCache = [
   '/',
-  '/index.html',
+  './index.html',
   '/dashboard.html',
   '/login.html',
   '/game.js',
-  '/style.css',
+  './style.css',
   '/manifest.json', // <-- Add this line
   'https://cdn.jsdelivr.net/npm/chart.js'
 ];
